@@ -1,0 +1,164 @@
+\documentclass[12pt, a4paper, onecolumn, oneside, final]{report}
+
+\usepackage{tocbibind}
+\usepackage{natbib}
+
+\usepackage{hyperref}
+  \hypersetup{
+  	colorlinks=false,
+  	pdfborder=0 0 0,
+  	linkcolor=blue,
+  	citecolor=black,
+  	bookmarksopen=false,
+  	bookmarksnumbered=true,
+  	pdfstartview=FitH,
+  	pdfview=FitH
+	}
+	
+\usepackage{url}
+  \urlstyle{same}
+
+\usepackage{fancyhdr}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{bm}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{pdfpages}
+\usepackage[bahasa]{babel}
+\usepackage[fixlanguage]{babelbib}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,           
+    keepspaces=true,                 
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    numbers=none
+}
+
+\lstset{style=mystyle}
+
+\title{Tugas Kelompok 1\\Aljabar Numerik Kelas A\\Tahun Ajaran 2020/2021}
+\author{Eko Julianto Salim, Hocky Yudhiono, Jonathan Nicholas}
+
+\begin{document}
+
+\maketitle
+
+% \chapter{Pendahuluan}
+
+% \chapter{Isi}
+
+\section*{Soal 1}
+
+A =
+\begin{equation*}
+	\begin{pmatrix}
+		16 & -9 & \frac{8}{3} & -\frac{1}{4} \\
+		-4 & 6 & -4 & 1 \\
+		1 & -4 & 6 & -4 & 1 \\
+		  & 1 & -4 & 6 & -4 & 1 \\
+		  & & \ddots & \ddots & \ddots & \ddots & \ddots \\
+		  & & & 1 & -4 & 6 & -4 & 1 \\
+		  & & & & 1 & -4 & 6 & -4 & 1 \\
+		  & & & & & \frac{16}{17} & -\frac{60}{17} & \frac{72}{17} & -\frac{28}{17} \\
+		  & & & & & -\frac{12}{17} & \frac{96}{17} & -\frac{156}{17} & \frac{72}{17} \\ 
+	\end{pmatrix}
+\end{equation*}
+
+\begin{lstlisting}[language=Octave]
+function [A] = getEulerBernoulliBeamMatrix(n)
+  A = sparse(n, n);
+  A(1, 1) =   16;
+  A(1, 2) =   -9;
+  A(1, 3) =  8/3;
+  A(1, 4) = -1/4;
+  A(2, 1) =   -4;
+  A(2, 2) =    6;
+  A(2, 3) =   -4;
+  A(2, 4) =    1;
+  for i=3:n-2
+    A(i, i - 2) =  1;
+    A(i, i - 1) = -4;
+    A(i, i)     =  6;
+    A(i, i + 1) = -4;
+    A(i, i + 2) =  1;
+  end
+  A(n-1,n-3) =   16/17;
+  A(n-1,n-2) =  -60/17;
+  A(n-1,n-1) =   72/17;
+  A(n-1,n)   =  -28/17;
+  A(n,n-3)   =  -12/17;
+  A(n,n-2)   =   96/17;
+  A(n,n-1)   = -156/17;
+  A(n,n)     =   72/17;
+endfunction
+
+function [b] = papanLoncat(n)
+ 
+  L =     2; % 2m
+  h = L / n;
+  w =   0.3; % 30cm = 0.3m
+  d =  0.03; % 3cm = 0.03m
+  
+  kerapatan =  480; % 480kg/m^3
+  E =       1.3e10; % N/m^2
+  I = w * d^3 / 12;
+  g =         9.81; % Definisikan sebagai konstanta gravitasi
+  
+  f = (-480 * w * d * g);
+  f =    h^4/(E * I) * f;
+  
+  b = f * ones(n, 1);
+endfunction
+\end{lstlisting}
+
+Kita sudah mempelajari tentang beberapa algoritme yang bisa digunakan untuk menyelesaikan matriks-matriks \textbf{khusus} yang secara kompleksitas lebih cepat. Misalnya pada \textit{banded matrix}, kita bisa melakukan $LU$ \textit{decomposition} yang lebih \textbf{efisien}.
+
+Caranya ialah dengan melakukan pembatasan atau \textit{pruning} contohnya seperti kode di atas. Perhatikan bahwa kompleksitas dari algoritme ini ialah sekitar $O(NPQ)$ dengan $N$ ukuran matriks, $Q$ panjang pita bawah, dan $P$ panjang pita atas. Dalam kasus ini, $P$ dan $Q$ bernilai $2$, kecuali untuk beberapa baris yang kurang sesuai (\textit{off by one})
+
+Namun akan terjadi beberapa kesalahan, kami mengetahui hal ini karena saat mencoba memasukkan baris \texttt{[L U] = lu(A)} terjadi ketidaksesuaian. Setelah diteliti lebih lanjut, matriks ini membutuhkan \textit{pivoting} agar proses dekomposisi berhasil.
+
+Kemudian, amati pula beberapa proses yang akan dilakukan dalam aproksimasi perhitungan ini. Pada dasarnya proses $LU$ \textit{decomposition} sama saja dengan \textit{Gaussian Elimination}. Namun pada umumnya $LU$ \textit{decomposition} digunakan karena melakukan \textit{precomputation} terhadap kedua matriks $L$ dan $U$. Sehingga saat ingin mencari solusi untuk $b$ lain, tidak perlu melakukan komputasi dengan kompleksitas $O(N^3)$ lagi. Melainkan hanya perlu melakukan \textit{forward} dan \textit{backward} substitution, dengan total kompleksitas $O(N^2)$ untuk setiap $b$ yang berbeda.
+
+Dalam kasus ini memang agak susah dalam membuat program yang dapat melakukan \textit{row pivoting}, terutama untuk \textit{banded matrix} yang kurang sempurna pada kasus ini. Sehingga salah satu solusinya ialah dengan melakukan $LU$ \textit{decomposition} dengan \textit{partial pivoting}. Namun, akan dilakukan \textit{pruning} ketika elemen yang akan dikomputasi saat ini sudah bernilai $0$. Dalam kasus ini, masih mempertahankan kompleksitas $O(NPQ)$, dengan menambahkan suatu operasi pengecekan apakah entri bernilai $0$.
+
+Cara lainnya ialah, langsung saja menggunakan Eliminasi Gauss. Perhatikan bahwa dengan bandwidth yang kecil, kompleksitasnya sangat mirip saat menggunakan dekomposisi $LU$ ataupun eliminasi Gauss. Bila $P$ dan $Q$ dianggap konstan, kedua operasi tersebut menghasilkan kompleksitas linear.
+
+
+\section*{Soal 2}
+Each exercise (except the first) starts on a new page. You can disable this behavior using the starred version of the command: \verb|\exercise*|.
+
+Now, let's consider a mathematical example.
+
+\section*{Soal 3}
+Each exercise (except the first) starts on a new page. You can disable this behavior using the starred version of the command: \verb|\exercise*|.
+
+Now, let's consider a mathematical example.
+
+\section*{Soal 4}
+Each exercise (except the first) starts on a new page. You can disable this behavior using the starred version of the command: \verb|\exercise*|.
+
+Now, let's consider a mathematical example.
+
+\nocite{*}
+\bibliographystyle{apalike}
+\bibliography{bibliography.bib}
+\end{document}
